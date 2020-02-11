@@ -154,6 +154,8 @@ function Invoke-DbaDbMirroring {
         [DbaInstanceParameter]$Witness,
         [PSCredential]$WitnessSqlCredential,
         [string[]]$Database,
+        [string[]]$DestinationDataDirectory,
+		[string[]]$DestinationLogsDirectory,
         [string]$SharedPath,
         [parameter(ValueFromPipeline)]
         [Microsoft.SqlServer.Management.Smo.Database[]]$InputObject,
@@ -173,6 +175,16 @@ function Invoke-DbaDbMirroring {
     process {
         if ((Test-Bound -ParameterName Primary) -and (Test-Bound -Not -ParameterName Database)) {
             Stop-Function -Message "Database is required when Primary is specified"
+            return
+        }
+        
+        if (Test-Bound -Not -ParameterName DestinationDataDirectory) {
+            Stop-Function -Message "DestinationDataDirectory not specified "
+            return
+        }
+		
+		if (Test-Bound -Not -ParameterName DestinationLogsDirectoryDirectory) {
+            Stop-Function -Message "DestinationLogsDirectoryDirectory not specified "
             return
         }
 
@@ -247,7 +259,7 @@ function Invoke-DbaDbMirroring {
                     if ($Pscmdlet.ShouldProcess("$currentmirror", "Restoring full and log backups of $primarydb from $Primary")) {
                         foreach ($currentmirrorinstance in $currentmirror) {
                             try {
-                                $null = $allbackups | Restore-DbaDatabase -SqlInstance $currentmirrorinstance -SqlCredential $currentmirrorSqlCredential -WithReplace -NoRecovery -TrustDbBackupHistory -EnableException
+                                $null = $allbackups | Restore-DbaDatabase -SqlInstance $currentmirrorinstance -SqlCredential $currentmirrorSqlCredential -WithReplace -NoRecovery -TrustDbBackupHistory -EnableException  -DestinationDataDirectory $DestinationDataDirectory -DestinationLogsDirectory $DestinationLogsDirectoryDirectory
                             } catch {
                                 Stop-Function -Message "Failure" -ErrorRecord $_ -Target $dest -Continue
                             }
@@ -278,7 +290,7 @@ function Invoke-DbaDbMirroring {
 
                     if ($Pscmdlet.ShouldProcess("$Witness", "Restoring full and log backups of $primarydb from $Primary")) {
                         try {
-                            $null = $allbackups | Restore-DbaDatabase -SqlInstance $Witness -SqlCredential $WitnessSqlCredential -WithReplace -NoRecovery -TrustDbBackupHistory -EnableException
+                            $null = $allbackups | Restore-DbaDatabase -SqlInstance $Witness -SqlCredential $WitnessSqlCredential -WithReplace -NoRecovery -TrustDbBackupHistory -EnableException 
                         } catch {
                             Stop-Function -Message "Failure" -ErrorRecord $_ -Target $witserver -Continue
                         }
