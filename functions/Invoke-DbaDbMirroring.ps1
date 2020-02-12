@@ -1,4 +1,4 @@
-function Invoke-DbaDbMirroring {
+function Invoke-DbaDbMirroringv2 {
     <#
     .SYNOPSIS
         Automates the creation of database mirrors.
